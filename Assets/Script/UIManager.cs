@@ -74,7 +74,7 @@ public class UIManager : MonoBehaviour
             if (i == privacy.ReviewList.Count || privacy.ReviewList.Count == 0)
             {
                 GameObject NewReviewButton = Instantiate(NewReview);
-                NewReviewButton.transform.SetParent(GameObject.Find("ReviewLayout").transform, false);
+                NewReviewButton.transform.SetParent(GameObject.Find("Review content").transform, false);
                 InstanceObject.Add(NewReviewButton);
                 Button button = NewReviewButton.GetComponent<Button>();
                 if(button != null)
@@ -86,7 +86,7 @@ public class UIManager : MonoBehaviour
             {
                 GameObject temp = Instantiate(privacy.ReviewList[i]);
                 InstanceObject.Add(temp);
-                temp.transform.SetParent(GameObject.Find("ReviewLayout").transform, false);
+                temp.transform.SetParent(GameObject.Find("Review content").transform, false);
             }
         }
     }
