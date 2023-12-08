@@ -11,6 +11,9 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject NewReview;
     [SerializeField] private GameObject WriteWindow;
     [SerializeField] private InputField Review;
+
+    [SerializeField] private GameObject PrivacyPanel;
+    [SerializeField] private GameObject ReviewPanel;
     public bool IsLogin
     {
         get { return isLogin; }
@@ -41,7 +44,9 @@ public class UIManager : MonoBehaviour
             switch (name)
             {
                 case "review":
+                    ReviewPanel.gameObject.SetActive(true);
                     LoadReviewPanel();
+                    PrivacyPanel.gameObject.SetActive(false);
                     break;
 
                 case "save":
@@ -52,7 +57,12 @@ public class UIManager : MonoBehaviour
                     break;
 
                 case "back":
-                    DestroyObject();
+                    if (ReviewPanel.activeSelf)
+                    {
+                        DestroyReview();
+                        ReviewPanel.SetActive(false);
+                        PrivacyPanel.SetActive(true);
+                    }
                     break;
 
                 case "newreview":
@@ -119,7 +129,7 @@ public class UIManager : MonoBehaviour
         tempRect.anchoredPosition = new Vector2(0f, 0f);
     }
 
-    private void DestroyObject()
+    private void DestroyReview()
     {
         foreach(GameObject go in InstanceObject)
         {
