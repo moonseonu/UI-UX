@@ -12,6 +12,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject WriteWindow;
     [SerializeField] private InputField Review;
 
+    [SerializeField] private GameObject MainPanel;
     [SerializeField] private GameObject PrivacyPanel;
     [SerializeField] private GameObject ReviewPanel;
     public bool IsLogin
@@ -71,6 +72,16 @@ public class UIManager : MonoBehaviour
 
                 case "saving":
 
+                    break;
+
+                case "privacy":
+                    MainPanel.SetActive(false);
+                    PrivacyPanel.SetActive(true);
+                    break;
+
+                case "home":
+                    MainPanel.SetActive(true);
+                    PrivacyPanel.SetActive(false);
                     break;
             }
         }
