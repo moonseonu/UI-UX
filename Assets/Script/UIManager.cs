@@ -7,14 +7,72 @@ public class UIManager : MonoBehaviour
 {
     public static UIManager instance = null;
     private bool isLogin = true;
-    private List<GameObject> InstanceObject = new List<GameObject>();
+    [SerializeField] private List<GameObject> InstanceObject = new List<GameObject>();
     [SerializeField] private GameObject NewReview;
     [SerializeField] private GameObject WriteWindow;
     [SerializeField] private InputField Review;
 
     [SerializeField] private GameObject MainPanel;
     [SerializeField] private GameObject PrivacyPanel;
+    [SerializeField] private GameObject NavigationBar;
+    [SerializeField] private List<GameObject> PanelStack = new List<GameObject>();
+    private void PanelSetActive(string name)
+    {
+        switch (name)
+        {
+            case "home":
+                foreach (GameObject go in PanelStack)
+                {
+                    InstanceObject.Clear();
+                    go.SetActive(false);
+                }
+                MainPanel.SetActive(true);
+                break;
+
+            case "plan":
+                break;
+
+            case "privacy":
+                foreach (GameObject go in PanelStack)
+                {
+                    InstanceObject.Clear();
+                    go.SetActive(false);
+                }
+                PrivacyPanel.SetActive(true);
+                break;
+        }
+    }
+
+    private void AddPanelStack(GameObject panel)
+    {
+        PanelStack.Add(panel);
+    }
+
+    private void BackPanelStack(GameObject panel)
+    {
+        PanelStack.Remove(panel);
+    }
+
     [SerializeField] private GameObject ReviewPanel;
+    [SerializeField] private GameObject SavePanel;
+
+    [SerializeField] private GameObject MotelListPanel;
+    [SerializeField] private GameObject MotelLayout;
+    [SerializeField] private GameObject MotelInfoPage;
+
+    [SerializeField] private List<GameObject> MotelList = new List<GameObject>();
+    [SerializeField] private List<GameObject> MotelPageList = new List<GameObject>();
+
+    [SerializeField] private List<GameObject> ReviewList = new List<GameObject>();
+    [SerializeField] private List<GameObject> SavedList = new List<GameObject>();
+    public void AddSavedList(GameObject list)
+    {
+        SavedList.Add(list);
+    }
+    public void DeleteSavedList(GameObject list)
+    {
+        SavedList.Remove(list);
+    }
     public bool IsLogin
     {
         get { return isLogin; }
@@ -46,12 +104,14 @@ public class UIManager : MonoBehaviour
             {
                 case "review":
                     ReviewPanel.gameObject.SetActive(true);
-                    LoadReviewPanel();
+                    LoadPanel("Review");
                     PrivacyPanel.gameObject.SetActive(false);
                     break;
 
                 case "save":
-                    LoadSavePanel();
+                    SavePanel.SetActive(true);
+                    LoadPanel("Save");
+                    PrivacyPanel.gameObject.SetActive(false);
                     break;
 
                 case "setting":
@@ -60,14 +120,42 @@ public class UIManager : MonoBehaviour
                 case "back":
                     if (ReviewPanel.activeSelf)
                     {
-                        DestroyReview();
+                        DestroyList();
                         ReviewPanel.SetActive(false);
                         PrivacyPanel.SetActive(true);
+                        NavigationBar.SetActive(true);
                     }
+
+                    else if (SavePanel.activeSelf)
+                    {
+                        DestroyList();
+                        SavePanel.SetActive(false);
+                        PrivacyPanel.SetActive(true);
+                        NavigationBar.SetActive(true);
+                    }
+
+                    else if (MotelListPanel.activeSelf)
+                    {
+                        if (MotelInfoPage.activeSelf)
+                        {
+                            DestroyList();
+                            MotelLayout.SetActive(true);
+                            MotelInfoPage.SetActive(false);
+                            LoadPanel("Motel");
+                            NavigationBar.SetActive(true);
+                        }
+                        else if (MotelLayout.activeSelf)
+                        {
+                            DestroyList();
+                            MotelListPanel.SetActive(false);
+                            MainPanel.SetActive(true);
+                        }
+                    }
+
                     break;
 
                 case "newreview":
-                    LoadWriteReview();
+                    LoadPanel("WriteReview");
                     break;
 
                 case "saving":
@@ -77,74 +165,140 @@ public class UIManager : MonoBehaviour
                 case "privacy":
                     MainPanel.SetActive(false);
                     PrivacyPanel.SetActive(true);
+                    PanelSetActive("privacy");
                     break;
 
                 case "home":
                     MainPanel.SetActive(true);
                     PrivacyPanel.SetActive(false);
+                    PanelSetActive("home");
                     break;
+
+                case "motel":
+                    MotelListPanel.SetActive(true);
+                    LoadPanel("Motel");
+                    MainPanel.SetActive(false);
+                    AddPanelStack(MotelListPanel);
+                    break;
+
             }
         }
     }
 
-    private void LoadReviewPanel()
+    public void SavingEvent(string name)
     {
-        Privacy privacy = GameObject.Find("PrivacyPanel").GetComponent<Privacy>();
-        for (int i = 0; i <= privacy.ReviewList.Count; i++)
+        InfoManager info = GameObject.Find(name).GetComponent<InfoManager>();
+        if (!info.isSaved)
         {
-            if (i == privacy.ReviewList.Count || privacy.ReviewList.Count == 0)
-            {
-                GameObject NewReviewButton = Instantiate(NewReview);
-                NewReviewButton.transform.SetParent(GameObject.Find("Review content").transform, false);
-                InstanceObject.Add(NewReviewButton);
-                Button button = NewReviewButton.GetComponent<Button>();
-                if(button != null)
+            info.isSaved = true;
+            UIManager.instance.AddSavedList(gameObject);
+        }
+
+        else
+        {
+            info.isSaved = false;
+            UIManager.instance.DeleteSavedList(gameObject);
+        }
+    }
+
+    private void LoadPanel(string name)
+    {
+        Privacy privacy = null;
+        switch (name)
+        {
+            case "Review":
+                GameObject Reviewtemp;
+                for (int i = 0; i <= ReviewList.Count; i++)
                 {
-                    button.onClick.AddListener(() => ButtonEvent("newreview"));
+                    if (i == ReviewList.Count || ReviewList.Count == 0)
+                    {
+                        GameObject NewReviewButton = Instantiate(NewReview);
+                        NewReviewButton.transform.SetParent(GameObject.Find("Review content").transform, false);
+                        InstanceObject.Add(NewReviewButton);
+                        Button button = NewReviewButton.GetComponent<Button>();
+                        if (button != null)
+                        {
+                            button.onClick.AddListener(() => ButtonEvent("newreview"));
+                        }
+                    }
+                    else
+                    {
+                        Reviewtemp = Instantiate(ReviewList[i]);
+                        InstanceObject.Add(Reviewtemp);
+                        Reviewtemp.transform.SetParent(GameObject.Find("Review content").transform, false);
+                    }
                 }
-            }
-            else
-            {
-                GameObject temp = Instantiate(privacy.ReviewList[i]);
+                break;
+
+            case "Save":
+                GameObject Savetemp;
+                for (int i = 0; i < SavedList.Count; i++)
+                {
+                    Savetemp = Instantiate(SavedList[i]);
+                    InstanceObject.Add(Savetemp);
+                    Savetemp.transform.SetParent(GameObject.Find("SavePanel").transform, false);
+                }
+                break;
+
+            case "WriteReview":
+                GameObject temp = Instantiate(WriteWindow);
                 InstanceObject.Add(temp);
-                temp.transform.SetParent(GameObject.Find("Review content").transform, false);
-            }
+                temp.transform.SetParent(GameObject.Find("WriteReviewPanel").transform, false);
+                RectTransform tempRect = temp.GetComponent<RectTransform>();
+                tempRect.anchorMin = new Vector2(0.5f, 0.7f);
+                tempRect.anchorMax = new Vector2(0.5f, 0.7f);
+                tempRect.anchoredPosition = new Vector2(0f, 0f);
+                break;
+
+            //모텔 정보는 개발자가 직접 추가하는 형식이므로 각 리스트 인덱스마다 어떤 장소인지 정해져있다 보면 됨.
+            case "Motel":
+                for (int i = 0; i < MotelList.Count; i++)
+                {
+                    GameObject motel = Instantiate(MotelList[i]);
+                    InstanceObject.Add(motel);
+                    motel.transform.SetParent(GameObject.Find("Motel List content").transform, false);
+
+                    int index = i;
+                    Button button = motel.GetComponent<Button>();
+                    button.onClick.AddListener(() => MotelInfo(index));
+                }
+                break;
         }
     }
-
-    private void LoadSavePanel()
+    public void MotelInfo(int i)
     {
-        
-        Privacy privacy = GameObject.Find("PrivacyPanel").GetComponent<Privacy>();
-        for (int i = 0; i < privacy.SaveList.Count; i++)
+        switch (i)
         {
-            Debug.Log(privacy.SaveList);
-            GameObject temp = Instantiate(privacy.SaveList[i]);
-            InstanceObject.Add(temp);
-            temp.transform.SetParent(GameObject.Find("SavePanel").transform, false);
-            RectTransform tempRect = temp.GetComponent<RectTransform>();
-            tempRect.anchorMin = new Vector2(0.5f, 0.8f);
-            tempRect.anchorMax = new Vector2(0.5f, 0.8f);
-            tempRect.anchoredPosition = new Vector2(0f, 0f - (i * 50f));
+            case 0:
+                MotelLayout.SetActive(false);
+                MotelInfoPage.SetActive(true);
+                NavigationBar.SetActive(false);
+                GameObject Info = Instantiate(MotelPageList[0]);
+                InstanceObject.Add(Info);
+                Info.transform.SetParent(GameObject.Find("Info content").transform, false);
+
+                Button button = Info.transform.Find("Saving Button").GetComponent<Button>();
+                button.onClick.AddListener(() => AddSaveList(i, "motel"));
+                break;
         }
     }
 
-    private void LoadWriteReview()
+    private void AddSaveList(int i, string name)
     {
-        GameObject temp = Instantiate(WriteWindow);
-        InstanceObject.Add(temp);
-        temp.transform.SetParent(GameObject.Find("WriteReviewPanel").transform, false);
-        RectTransform tempRect = temp.GetComponent<RectTransform>();
-        tempRect.anchorMin = new Vector2(0.5f, 0.7f);
-        tempRect.anchorMax = new Vector2(0.5f, 0.7f);
-        tempRect.anchoredPosition = new Vector2(0f, 0f);
+        switch (name)
+        {
+            case "motel":
+                SavedList.Add(MotelList[i]);
+                break;
+        }
     }
 
-    private void DestroyReview()
+    private void DestroyList()
     {
         foreach(GameObject go in InstanceObject)
         {
             Destroy(go);
         }
+        InstanceObject.Clear();
     }
 }
