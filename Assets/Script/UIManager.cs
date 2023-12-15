@@ -14,6 +14,7 @@ public class UIManager : MonoBehaviour
 
     [SerializeField] private GameObject MainPanel;
     [SerializeField] private GameObject PrivacyPanel;
+    [SerializeField] private GameObject PlanPanel;
     [SerializeField] private GameObject NavigationBar;
     [SerializeField] private List<GameObject> PanelStack = new List<GameObject>();
     private void PanelSetActive(string name)
@@ -30,6 +31,12 @@ public class UIManager : MonoBehaviour
                 break;
 
             case "plan":
+                foreach (GameObject go in PanelStack)
+                {
+                    InstanceObject.Clear();
+                    go.SetActive(false);
+                }
+                PlanPanel.SetActive(true);
                 break;
 
             case "privacy":
@@ -65,6 +72,16 @@ public class UIManager : MonoBehaviour
 
     [SerializeField] private List<GameObject> ReviewList = new List<GameObject>();
     [SerializeField] private List<GameObject> SavedList = new List<GameObject>();
+
+    [SerializeField] private List<GameObject> RecentlyPage = new List<GameObject>();
+
+    private void InitRecentlyPage()
+    {
+        if(RecentlyPage.Count > 10)
+        {
+            RecentlyPage.Remove(RecentlyPage[9]);
+        }
+    }
     public void AddSavedList(GameObject list)
     {
         SavedList.Add(list);
@@ -93,7 +110,7 @@ public class UIManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        InitRecentlyPage();
     }
 
     public void ButtonEvent(string name)
@@ -165,13 +182,22 @@ public class UIManager : MonoBehaviour
                 case "privacy":
                     MainPanel.SetActive(false);
                     PrivacyPanel.SetActive(true);
+                    PlanPanel.SetActive(false);
                     PanelSetActive("privacy");
                     break;
 
                 case "home":
                     MainPanel.SetActive(true);
                     PrivacyPanel.SetActive(false);
+                    PlanPanel.SetActive(false);
                     PanelSetActive("home");
+                    break;
+
+                case "plan":
+                    PrivacyPanel.SetActive(false);
+                    MainPanel.SetActive(false);
+                    PlanPanel.SetActive(true);
+                    PanelSetActive("plan");
                     break;
 
                 case "motel":
@@ -185,25 +211,8 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public void SavingEvent(string name)
-    {
-        InfoManager info = GameObject.Find(name).GetComponent<InfoManager>();
-        if (!info.isSaved)
-        {
-            info.isSaved = true;
-            UIManager.instance.AddSavedList(gameObject);
-        }
-
-        else
-        {
-            info.isSaved = false;
-            UIManager.instance.DeleteSavedList(gameObject);
-        }
-    }
-
     private void LoadPanel(string name)
     {
-        Privacy privacy = null;
         switch (name)
         {
             case "Review":
@@ -244,10 +253,6 @@ public class UIManager : MonoBehaviour
                 GameObject temp = Instantiate(WriteWindow);
                 InstanceObject.Add(temp);
                 temp.transform.SetParent(GameObject.Find("WriteReviewPanel").transform, false);
-                RectTransform tempRect = temp.GetComponent<RectTransform>();
-                tempRect.anchorMin = new Vector2(0.5f, 0.7f);
-                tempRect.anchorMax = new Vector2(0.5f, 0.7f);
-                tempRect.anchoredPosition = new Vector2(0f, 0f);
                 break;
 
             //모텔 정보는 개발자가 직접 추가하는 형식이므로 각 리스트 인덱스마다 어떤 장소인지 정해져있다 보면 됨.
@@ -265,6 +270,7 @@ public class UIManager : MonoBehaviour
                 break;
         }
     }
+
     public void MotelInfo(int i)
     {
         switch (i)
@@ -275,11 +281,15 @@ public class UIManager : MonoBehaviour
                 NavigationBar.SetActive(false);
                 GameObject Info = Instantiate(MotelPageList[0]);
                 InstanceObject.Add(Info);
+                AddRecentlyPage(i, "motel");
                 Info.transform.SetParent(GameObject.Find("Info content").transform, false);
 
-                Button button = Info.transform.Find("Saving Button").GetComponent<Button>();
-                button.onClick.AddListener(() => AddSaveList(i, "motel"));
+                Button savebutton = Info.transform.Find("Saving Button").GetComponent<Button>();
+                savebutton.onClick.AddListener(() => AddSaveList(i, "motel"));
                 break;
+
+                Button planningbutton = Info.transform.Find("Planning").GetComponent<Button> ();
+                //planningbutton.onClick.AddListener(() => );
         }
     }
 
@@ -289,6 +299,16 @@ public class UIManager : MonoBehaviour
         {
             case "motel":
                 SavedList.Add(MotelList[i]);
+                break;
+        }
+    }
+
+    private void AddRecentlyPage(int i, string name)
+    {
+        switch (name)
+        {
+            case "motel":
+                RecentlyPage.Add(MotelList[i]);
                 break;
         }
     }
