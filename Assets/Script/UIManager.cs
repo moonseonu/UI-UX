@@ -7,15 +7,25 @@ public class UIManager : MonoBehaviour
 {
     public static UIManager instance = null;
     private bool isLogin = true;
+
+    [SerializeField] private GameObject Instance;
+
     [SerializeField] private List<GameObject> InstanceObject = new List<GameObject>();
     [SerializeField] private GameObject NewReview;
     [SerializeField] private GameObject NewPlan;
     [SerializeField] private GameObject WriteWindow;
-    [SerializeField] private InputField Review;
 
     [SerializeField] private GameObject MainPanel;
     [SerializeField] private GameObject PrivacyPanel;
+
     [SerializeField] private GameObject PlanPanel;
+    [SerializeField] private GameObject PlanningPanel;
+    [SerializeField] private GameObject PlanLayout;
+
+    [SerializeField] private GameObject AddButton;
+    [SerializeField] private GameObject SearchPanel;
+
+
     [SerializeField] private List<GameObject> MyPlan = new List<GameObject>();
     [SerializeField] private GameObject NavigationBar;
     [SerializeField] private List<GameObject> PanelStack = new List<GameObject>();
@@ -25,30 +35,39 @@ public class UIManager : MonoBehaviour
         switch (name)
         {
             case "home":
+                DestroyList();
                 foreach (GameObject go in PanelStack)
                 {
                     InstanceObject.Clear();
                     go.SetActive(false);
                 }
                 MainPanel.SetActive(true);
+                PanelStack.Clear();
                 break;
 
             case "plan":
+                DestroyList();
                 foreach (GameObject go in PanelStack)
                 {
                     InstanceObject.Clear();
                     go.SetActive(false);
                 }
                 PlanPanel.SetActive(true);
+                LoadPanel("Plan");
+                PanelStack.Clear();
+                AddPanelStack(PlanPanel);
                 break;
 
             case "privacy":
+                DestroyList();
                 foreach (GameObject go in PanelStack)
                 {
                     InstanceObject.Clear();
                     go.SetActive(false);
                 }
                 PrivacyPanel.SetActive(true);
+                PanelStack.Clear();
+                AddPanelStack(PrivacyPanel);
                 break;
         }
     }
@@ -126,12 +145,14 @@ public class UIManager : MonoBehaviour
                     ReviewPanel.gameObject.SetActive(true);
                     LoadPanel("Review");
                     PrivacyPanel.gameObject.SetActive(false);
+                    AddPanelStack(ReviewPanel);
                     break;
 
                 case "save":
                     SavePanel.SetActive(true);
                     LoadPanel("Save");
                     PrivacyPanel.gameObject.SetActive(false);
+                    AddPanelStack(SavePanel);
                     break;
 
                 case "setting":
@@ -144,6 +165,7 @@ public class UIManager : MonoBehaviour
                         ReviewPanel.SetActive(false);
                         PrivacyPanel.SetActive(true);
                         NavigationBar.SetActive(true);
+                        BackPanelStack(ReviewPanel);
                     }
 
                     else if (SavePanel.activeSelf)
@@ -152,6 +174,7 @@ public class UIManager : MonoBehaviour
                         SavePanel.SetActive(false);
                         PrivacyPanel.SetActive(true);
                         NavigationBar.SetActive(true);
+                        BackPanelStack(SavePanel);
                     }
 
                     else if (MotelListPanel.activeSelf)
@@ -159,16 +182,64 @@ public class UIManager : MonoBehaviour
                         if (MotelInfoPage.activeSelf)
                         {
                             DestroyList();
-                            MotelLayout.SetActive(true);
-                            MotelInfoPage.SetActive(false);
-                            LoadPanel("Motel");
-                            NavigationBar.SetActive(true);
+                            if (PanelStack.Contains(MotelInfoPage))
+                            {
+                                MotelLayout.SetActive(true);
+                                MotelInfoPage.SetActive(false);
+                                LoadPanel("Motel");
+                                NavigationBar.SetActive(true);
+                                BackPanelStack(MotelInfoPage);
+                            }
+
+                            else if (PanelStack.Contains(SavePanel))
+                            {
+                                MotelListPanel.SetActive(false);
+                                SavePanel.SetActive(true);
+                                LoadPanel("Save");
+                                BackPanelStack(MotelInfoPage);
+                            }
                         }
                         else if (MotelLayout.activeSelf)
                         {
                             DestroyList();
                             MotelListPanel.SetActive(false);
                             MainPanel.SetActive(true);
+                            PanelStack.Clear();
+                        }
+                    }
+
+                    else if (PlanningPanel.activeSelf)
+                    {
+                        DestroyList();
+                        PlanPanel.SetActive(true);
+                        PlanningPanel.SetActive(false);
+                        NavigationBar.SetActive (true);
+                        LoadPanel("Plan");
+                        BackPanelStack(PlanningPanel);
+                    }
+
+                    else if (SearchPanel.activeSelf)
+                    {
+                        DestroyList();
+                        if (PanelStack.Contains(PlanningPanel))
+                        {
+                            PlanningPanel.SetActive(true);
+                            BackPanelStack(SearchPanel);
+                            Instance = Instantiate(AddButton);
+                            InstanceObject.Add(Instance);
+                            Instance.transform.SetParent(GameObject.Find("Add Place content").transform, false);
+
+                            Button nbutton = Instance.GetComponent<Button>();
+                            if (nbutton != null)
+                            {
+                                nbutton.onClick.AddListener(() => LoadPanel("Search"));
+                            }
+                            SearchPanel.SetActive(false);
+                        }
+
+                        else
+                        {
+                            PanelSetActive("home");
                         }
                     }
 
@@ -179,6 +250,21 @@ public class UIManager : MonoBehaviour
                     break;
 
                 case "newplan":
+                    PlanningPanel.SetActive(true);
+                    PlanPanel.SetActive(false);
+                    NavigationBar.SetActive(false);
+
+                    AddPanelStack(PlanningPanel);
+
+                    Instance = Instantiate(AddButton);
+                    InstanceObject.Add(Instance);
+                    Instance.transform.SetParent(GameObject.Find("Add Place content").transform, false);
+
+                    Button button = Instance.GetComponent<Button>();
+                    if (button != null)
+                    {
+                        button.onClick.AddListener(() => LoadPanel("Search"));
+                    }
                     break;
 
                 case "saving":
@@ -213,6 +299,13 @@ public class UIManager : MonoBehaviour
                     AddPanelStack(MotelListPanel);
                     break;
 
+                case "search":
+                    SearchPanel.SetActive(true);
+                    LoadPanel("Search");
+                    MainPanel.SetActive(false);
+                    AddPanelStack(SearchPanel);
+                    break;
+
             }
         }
     }
@@ -236,6 +329,7 @@ public class UIManager : MonoBehaviour
                             button.onClick.AddListener(() => ButtonEvent("newreview"));
                         }
                     }
+
                     else
                     {
                         Reviewtemp = Instantiate(ReviewList[i]);
@@ -275,7 +369,11 @@ public class UIManager : MonoBehaviour
                 {
                     Savetemp = Instantiate(SavedList[i]);
                     InstanceObject.Add(Savetemp);
-                    Savetemp.transform.SetParent(GameObject.Find("SavePanel").transform, false);
+                    Savetemp.transform.SetParent(GameObject.Find("Save List content").transform, false);
+
+                    int index = i;
+                    Button button = Savetemp.GetComponent<Button>();
+                    button.onClick.AddListener(() => MotelInfo(index, "save"));
                 }
                 break;
 
@@ -295,40 +393,89 @@ public class UIManager : MonoBehaviour
 
                     int index = i;
                     Button button = motel.GetComponent<Button>();
-                    button.onClick.AddListener(() => MotelInfo(index));
+                    button.onClick.AddListener(() => MotelInfo(index, "motel"));
                 }
                 break;
+
+            case "Search":
+                if (PlanningPanel.activeSelf)
+                {
+                    AddPanelStack(SearchPanel);
+                    SearchPanel.SetActive(true);
+                    for (int i = 0; i < RecentlyPage.Count; i++)
+                    {
+                        Instance = Instantiate(RecentlyPage[i]);
+                        InstanceObject.Add(Instance);
+                        Instance.transform.SetParent(GameObject.Find("Recently content").transform, false);
+
+                        int index = i;
+
+                        Button button = Instance.GetComponent<Button>();
+
+                        button.onClick.AddListener(() => AddPlan(RecentlyPage[index]));
+                    }
+                    PlanningPanel.SetActive(false);
+                }
+                break;
+
         }
     }
 
-    public void MotelInfo(int i)
+    public void MotelInfo(int i, string panel)
     {
-        switch (i)
+        switch (panel)
         {
-            case 0:
+            case "save":
+                MotelListPanel.SetActive(true);
+                MotelLayout.SetActive(false);
+                MotelInfoPage.SetActive(true);
+
+                GameObject saveInfo = Instantiate(MotelPageList[i]);
+                InstanceObject.Add(saveInfo);
+                AddRecentlyPage(i, "motel");
+                saveInfo.transform.SetParent(GameObject.Find("Info content").transform, false);
+
+                Button savebutton = saveInfo.transform.Find("Saving Button").GetComponent<Button>();
+                savebutton.onClick.AddListener(() => AddSaveList(i, "motel"));
+
+                SavePanel.SetActive(false);
+                break;
+
+            case "motel":
                 MotelLayout.SetActive(false);
                 MotelInfoPage.SetActive(true);
                 NavigationBar.SetActive(false);
-                GameObject Info = Instantiate(MotelPageList[0]);
+
+                AddPanelStack(MotelInfoPage);
+                Button motelbutton = null;
+
+                GameObject Info = Instantiate(MotelPageList[i]);
                 InstanceObject.Add(Info);
-                AddRecentlyPage(i, "motel");
                 Info.transform.SetParent(GameObject.Find("Info content").transform, false);
 
-                Button savebutton = Info.transform.Find("Saving Button").GetComponent<Button>();
-                savebutton.onClick.AddListener(() => AddSaveList(i, "motel"));
-                break;
+                motelbutton = Info.transform.Find("Saving Button").GetComponent<Button>();
 
-                Button planningbutton = Info.transform.Find("Planning").GetComponent<Button> ();
-                //planningbutton.onClick.AddListener(() => );
+                motelbutton.onClick.AddListener(() => AddSaveList(i, "motel"));
+                AddRecentlyPage(i, "motel");
+
+
+                break;
         }
     }
-
+    public void AddPlan(GameObject go)
+    {
+        MyPlan.Add(go);
+        ButtonEvent("back");
+    }
     private void AddSaveList(int i, string name)
     {
         switch (name)
         {
             case "motel":
-                SavedList.Add(MotelList[i]);
+                if (!SavedList.Contains(MotelList[i]))
+                    SavedList.Add(MotelList[i]);
+                else
+                    SavedList.Remove(MotelList[i]);
                 break;
         }
     }
@@ -338,7 +485,10 @@ public class UIManager : MonoBehaviour
         switch (name)
         {
             case "motel":
-                RecentlyPage.Add(MotelList[i]);
+                if (!RecentlyPage.Contains(MotelList[i]))
+                {
+                    RecentlyPage.Add(MotelList[i]);
+                }
                 break;
         }
     }
