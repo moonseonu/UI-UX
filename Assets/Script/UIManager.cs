@@ -9,14 +9,17 @@ public class UIManager : MonoBehaviour
     private bool isLogin = true;
     [SerializeField] private List<GameObject> InstanceObject = new List<GameObject>();
     [SerializeField] private GameObject NewReview;
+    [SerializeField] private GameObject NewPlan;
     [SerializeField] private GameObject WriteWindow;
     [SerializeField] private InputField Review;
 
     [SerializeField] private GameObject MainPanel;
     [SerializeField] private GameObject PrivacyPanel;
     [SerializeField] private GameObject PlanPanel;
+    [SerializeField] private List<GameObject> MyPlan = new List<GameObject>();
     [SerializeField] private GameObject NavigationBar;
     [SerializeField] private List<GameObject> PanelStack = new List<GameObject>();
+
     private void PanelSetActive(string name)
     {
         switch (name)
@@ -175,6 +178,9 @@ public class UIManager : MonoBehaviour
                     LoadPanel("WriteReview");
                     break;
 
+                case "newplan":
+                    break;
+
                 case "saving":
 
                     break;
@@ -235,6 +241,30 @@ public class UIManager : MonoBehaviour
                         Reviewtemp = Instantiate(ReviewList[i]);
                         InstanceObject.Add(Reviewtemp);
                         Reviewtemp.transform.SetParent(GameObject.Find("Review content").transform, false);
+                    }
+                }
+                break;
+
+            case "Plan":
+                GameObject Plantemp;
+                for (int i = 0; i <= MyPlan.Count; i++)
+                {
+                    if (i == MyPlan.Count || MyPlan.Count == 0)
+                    {
+                        GameObject NewPlanButton = Instantiate(NewPlan);
+                        NewPlanButton.transform.SetParent(GameObject.Find("Plan content").transform, false);
+                        InstanceObject.Add(NewPlanButton);
+                        Button button = NewPlanButton.GetComponent<Button>();
+                        if (button != null)
+                        {
+                            button.onClick.AddListener(() => ButtonEvent("newplan"));
+                        }
+                    }
+                    else
+                    {
+                        Plantemp = Instantiate(MyPlan[i]);
+                        InstanceObject.Add(Plantemp);
+                        Plantemp.transform.SetParent(GameObject.Find("Plan content").transform, false);
                     }
                 }
                 break;
